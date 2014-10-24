@@ -1,18 +1,67 @@
 package cn.kang.base;
 
 import android.content.Context;
+import android.os.Build;
 import android.util.Log;
 import android.widget.Toast;
 
 public class KLog {
     public static boolean LOG_ENABLED = true;
     public static boolean TRACE_ENABLED = true;
-    private static String TAG = "TRACE";
+    private static String TRACE = "TRACE";
+    private String TAG = "TAG";
     private static final String TAG_CONTENT_PRINT = "%s:%s.%s:%d";
 
     private KLog() {
     }
 
+    private KLog(Class<?> clazz) {
+        TAG = initTag(clazz);
+    }
+
+    protected String initTag(Class<?> clazz) {
+        return String.format("%s: %s", Build.VERSION.RELEASE, clazz.getSimpleName());
+    }
+
+    public static final KLog getLog(Class<?> clazz) {
+        return new KLog(clazz);
+    }
+
+    //使用实例方式,用类名作为TAG记录日志
+    public void d(String msg) {
+        if (LOG_ENABLED) Log.d(TAG, format(msg));
+    }
+
+    public void i(String msg) {
+        if (LOG_ENABLED) Log.i(TAG, format(msg));
+    }
+
+    public void e(String msg) {
+        if (LOG_ENABLED) Log.e(TAG, format(msg));
+    }
+
+    public void w(String msg) {
+        if (LOG_ENABLED) Log.w(TAG, format(msg));
+    }
+
+    public void v(String msg) {
+        if (LOG_ENABLED) Log.v(TAG, format(msg));
+    }
+
+    public void wtf(String msg) {
+        if (LOG_ENABLED) Log.wtf(TAG, format(msg));
+    }
+
+    //使用默认TAG记录日志,仅仅输出记录而已
+    public static void print(String msg) {
+        if (LOG_ENABLED) Log.d(TRACE, format(msg));
+    }
+
+    public static void error(String msg) {
+        if (LOG_ENABLED) Log.e(TRACE, format(msg));
+    }
+
+    //自定义TAG输出日志,使用系统Log
     public static void d(String tag, String msg) {
         if (LOG_ENABLED) Log.d(tag, format(msg));
     }
@@ -37,6 +86,7 @@ public class KLog {
         if (LOG_ENABLED) Log.wtf(tag, format(msg));
     }
 
+    //自定义TAG输出日志,使用系统Log
     public static void d(String tag, String msg, Throwable r) {
         if (LOG_ENABLED) Log.d(tag, format(msg), r);
     }
@@ -60,6 +110,38 @@ public class KLog {
     public static void wtf(String tag, String msg, Throwable r) {
         if (LOG_ENABLED) Log.wtf(tag, format(msg), r);
     }
+
+
+    //使用类名作为TAG输出日志,使用系统Log
+    public static void d(Class<?> _class, String msg) {
+        if (LOG_ENABLED) Log.d(_class.getSimpleName(), format(msg));
+    }
+
+    public static void i(Class<?> _class, String msg) {
+        if (LOG_ENABLED) Log.i(_class.getSimpleName(), format(msg));
+    }
+
+    public static void e(Class<?> _class, String msg) {
+        if (LOG_ENABLED) Log.e(_class.getSimpleName(), format(msg));
+    }
+
+    public static void w(Class<?> _class, String msg) {
+        if (LOG_ENABLED) Log.w(_class.getSimpleName(), format(msg));
+    }
+
+    public static void v(Class<?> _class, String msg) {
+        if (LOG_ENABLED) Log.v(_class.getSimpleName(), format(msg));
+    }
+
+    public static void wtf(Class<?> _class, String msg) {
+        if (LOG_ENABLED) Log.wtf(_class.getSimpleName(), format(msg));
+    }
+
+    public static String getStackTraceString(Throwable tr) {
+        if (LOG_ENABLED) return Log.getStackTraceString(tr);
+        else return "";
+    }
+
     /**
      * 使用Toast打印日志提示
      */
@@ -73,14 +155,14 @@ public class KLog {
     public static void trace() {
         if (LOG_ENABLED) {
             StackTraceElement stack = getCurrentStackTraceElement(4);
-            Log.d(TAG, stack!=null?stack.toString():"");
+            Log.d(TRACE, stack != null ? stack.toString() : "");
         }
     }
 
     //打印默认TAG的LOG
     public static void traceStack() {
         if (LOG_ENABLED) {
-            traceStack(TAG, Log.ERROR);
+            traceStack(TRACE, Log.ERROR);
         }
     }
 
@@ -99,35 +181,27 @@ public class KLog {
 
 
 
-    //默认TAG和指定内容的方法
-    public static void print(String msg) {
-        if (LOG_ENABLED) {
-            Log.d(TAG, format(msg));
-        }
-    }
 
     private static String format(String msg) {
         if (TRACE_ENABLED) {
             //return getCurrentStackTraceElement(5) + " >> " + msg;
-            return msg + " ["+getCurrentStackTraceElement(5)+"]";
+            return msg + " [" + getCurrentStackTraceElement(5) + "]";
         }
         return msg;
     }
 
     private static StackTraceElement getCurrentStackTraceElement(int num) {
-        StackTraceElement[] sts= Thread.currentThread().getStackTrace();
+        StackTraceElement[] sts = Thread.currentThread().getStackTrace();
         return Thread.currentThread().getStackTrace()[num];
 
     }
-
-
 
 
     //==========================暂时不用的方法=============================
 
     //获取LOG
     private static String getContent(StackTraceElement trace) {
-        return String.format(TAG_CONTENT_PRINT, TAG, trace.getClassName(), trace.getMethodName(), trace.getLineNumber());
+        return String.format(TAG_CONTENT_PRINT, TRACE, trace.getClassName(), trace.getMethodName(), trace.getLineNumber());
     }
 
     // 打印Log当前调用栈信息
@@ -171,8 +245,7 @@ public class KLog {
                 continue;
             }
 
-            return "[" + Thread.currentThread().getName() + "(" + Thread.currentThread().getId()
-                   + "): " + st.getFileName() + ":" + st.getLineNumber() + "]";
+            return "[" + Thread.currentThread().getName() + "(" + Thread.currentThread().getId() + "): " + st.getFileName() + ":" + st.getLineNumber() + "]";
         }
         return null;
     }
